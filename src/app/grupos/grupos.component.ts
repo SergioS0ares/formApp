@@ -1,87 +1,44 @@
-import { Component } from '@angular/core';
-import {FormService} from "../services/form.service";
-import {Router, RouterModule} from "@angular/router";
-import {FormsModule, NgForm} from "@angular/forms";
-import {GrupoService} from "../services/grupo.service";
-import {Pessoa} from "../models/pessoa";
-import {Grupo} from "../models/grupo";
-import {MatFormField, MatFormFieldModule} from "@angular/material/form-field";
-import {MatOption, MatSelect, MatSelectModule} from "@angular/material/select";
-import {MatCard, MatCardModule, MatCardTitle} from "@angular/material/card";
-import {CommonModule, NgForOf} from "@angular/common";
-import {MatInputModule} from "@angular/material/input";
-import {MatOptionModule} from "@angular/material/core";
-import {MatToolbarModule} from "@angular/material/toolbar";
+import { Component, OnInit } from '@angular/core';
+import { GrupoService } from '../services/grupo.service';
+import { Grupo } from '../models/grupo';
+import { MatTable } from '@angular/material/table';
+import { MatTableModule } from '@angular/material/table';
+import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { MatCardActions } from '@angular/material/card';
+import { MatButton } from '@angular/material/button';
 
 @Component({
-  selector: 'app-grupos',
+  selector: 'app-grupo-list',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterModule, // Necessário se o componente usar diretivas de roteamento
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
-    FormsModule,
-    MatToolbarModule
+    MatTable,
+    DatePipe,
+    MatTableModule,
+    RouterLink,
+    MatCardActions,
+    MatButton
   ],
-  templateUrl: './grupos.component.html',
-  styleUrl: './grupos.component.css'
+  templateUrl: './grupo-list-component.component.html',
+  styleUrl: './grupo-list-component.component.css'
 })
-export class GruposComponent {
+export class GrupoListComponent implements OnInit {
+  grupos: Grupo[] = [];
+  displayedColumns: string[] = ['id', 'nome', 'descricao', 'pessoa', 'config'];
 
-  pessoas: Pessoa[] = [];
+  constructor(private grupoService: GrupoService) { }
 
-  grupo: Grupo = {
-    id: 0,
-    nome: '',
-    descricao: '',
-    pessoaid: 0
-   };
-
-  constructor(private _FormService: FormService, private _router: Router,  private _GrupoService: GrupoService) {}
-
-  ngOnInit() {
-    // Pegue o id da pessoa do serviço ou outra fonte de dados
-    this._FormService.getPessoas().subscribe({
-      next: (pessoas: Pessoa[]) => {
-        if (pessoas.length > 0) {
-          this.grupo.pessoaid = pessoas[0].id; // Por exemplo, pegando o id da primeira pessoa
-        }
-      },
-      error: (error) => {
-        console.error('Erro ao obter pessoas', error);
-      }
+  ngOnInit(): void {
+    // Busca os grupos do serviço
+    this.grupoService.getGrupos().subscribe((data) => {
+      this.grupos = data;
     });
   }
 
-  // Método chamado ao submeter o formulário
-  onSubmit(myForm: NgForm) {
-    if (myForm.valid) {
-      // Validação: Nome do grupo não pode ser vazio
-      if (!this.grupo.nome.trim()) {
-        alert('O nome do grupo é obrigatório.');
-        return;
-      }
-    this._GrupoService.salvarGrupo(this.grupo).subscribe({
-      next: (data) => {
-        console.log('Grupo salvo com sucesso', data);
-
-        // Redefinir o formulário e o objeto grupo
-        myForm.reset();
-        this.grupo = {
-          id: 0,
-          nome: '',
-          descricao: '',
-          pessoaid: 0  // Reseta o id da pessoa
-        };
-
-      },
-      error: (error) => {
-        console.error('Erro ao salvar o grupo', error);
-      },
+  removerGrupo(grupo: Grupo) {
+    this.grupoService.deletarGrupo(grupo.id).subscribe(() => {
+      // Remove o grupo da lista após exclusão
+      this.grupos = this.grupos.filter(g => g.id !== grupo.id);
     });
   }
-}}
+}
