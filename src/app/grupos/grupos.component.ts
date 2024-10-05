@@ -1,37 +1,39 @@
 import { Component, OnInit } from '@angular/core';
-import { FormService } from "../services/form.service";
-import { Router, RouterModule } from "@angular/router";
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { GrupoService } from '../services/grupo.service';
 import { FormsModule, NgForm } from "@angular/forms";
-import { GrupoService } from "../services/grupo.service";
-import { Pessoa } from "../models/pessoa";
 import { Grupo } from "../models/grupo";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatSelectModule } from "@angular/material/select";
-import { MatCardModule } from "@angular/material/card";
-import { CommonModule } from "@angular/common";
-import { MatInputModule } from "@angular/material/input";
-import { MatOptionModule } from "@angular/material/core";
-import { MatToolbarModule } from "@angular/material/toolbar";
-
+import { Pessoa } from "../models/pessoa";
+import { Router } from "@angular/router";
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { FormService } from '../services/form.service';
 
 @Component({
-  selector: 'app-grupo-list',
+  selector: 'app-grupo-formulario',
   standalone: true,
   imports: [
-    MatTable,
-    DatePipe,
-    MatTableModule,
-    RouterLink,
-    MatCardActions,
-    MatButton
+    CommonModule,
+    RouterModule, // Necessário se o componente usar diretivas de roteamento
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    FormsModule,
+    MatToolbarModule
   ],
-  templateUrl: './grupo-list-component.component.html',
-  styleUrl: './grupo-list-component.component.css'
+  templateUrl: './grupos.component.html',
+  styleUrls: ['./grupos.component.css']
 })
+
 export class GruposComponent implements OnInit {
 
-  pessoas: Pessoa[] = [];  // Lista de pessoas carregada pelo FormService
-  grupos: Grupo[] = [];    // Array de grupos
   grupo: Grupo = {
     id: 0,
     nome: '',
@@ -39,25 +41,24 @@ export class GruposComponent implements OnInit {
     pessoaid: 0
   };
 
-  constructor(
-    private _FormService: FormService,
-    private _router: Router,
-    private _GrupoService: GrupoService
-  ) {}
+  grupos: Grupo[] = [];
+  pessoas: Pessoa[] = []; // Array de pessoas
+
+  constructor(private _grupoService: GrupoService, private _formService: FormService, private _router: Router) {}
 
   ngOnInit() {
     // Carregar pessoas no select
-    this._FormService.getPessoas().subscribe({
+    this._formService.getPessoas().subscribe({
       next: (pessoas: Pessoa[]) => {
-        this.pessoas = pessoas;  // Armazena a lista de pessoas no array pessoas
+        this.pessoas = pessoas;  // Armazena a lista de pessoas no array
       },
       error: (error) => {
         console.error('Erro ao obter pessoas', error);
       }
-    }
+    });
 
     // Carregar a lista de grupos
-    this._GrupoService.getGrupos().subscribe({
+    this._grupoService.getGrupos().subscribe({
       next: (grupos: Grupo[]) => {
         this.grupos = grupos;  // Armazena a lista de grupos
       },
@@ -82,8 +83,11 @@ export class GruposComponent implements OnInit {
         return;
       }
 
+      // Logar o objeto grupo para verificar se os dados estão corretos
+      console.log('Grupo enviado:', this.grupo);
+
       // Chama o serviço para salvar o grupo
-      this._GrupoService.salvarGrupo(this.grupo).subscribe({
+      this._grupoService.salvarGrupo(this.grupo).subscribe({
         next: (data) => {
           console.log('Grupo salvo com sucesso', data);
 
@@ -92,7 +96,12 @@ export class GruposComponent implements OnInit {
 
           // Redefinir o formulário e o objeto grupo
           myForm.reset();
-
+          this.grupo = {
+            id: 0,
+            nome: '',
+            descricao: '',
+            pessoaid: 0  // Reseta o id da pessoa
+          };
 
           // Redireciona para a lista de grupos
           this._router.navigate(['/grupo-list']);
@@ -102,5 +111,5 @@ export class GruposComponent implements OnInit {
         },
       });
     }
-
+  }
 }
