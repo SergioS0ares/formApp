@@ -1,17 +1,17 @@
-import { Component } from '@angular/core';
-import {FormService} from "../services/form.service";
-import {Router, RouterModule} from "@angular/router";
-import {FormsModule, NgForm} from "@angular/forms";
-import {GrupoService} from "../services/grupo.service";
-import {Pessoa} from "../models/pessoa";
-import {Grupo} from "../models/grupo";
-import {MatFormField, MatFormFieldModule} from "@angular/material/form-field";
-import {MatOption, MatSelect, MatSelectModule} from "@angular/material/select";
-import {MatCard, MatCardModule, MatCardTitle} from "@angular/material/card";
-import {CommonModule, NgForOf} from "@angular/common";
-import {MatInputModule} from "@angular/material/input";
-import {MatOptionModule} from "@angular/material/core";
-import {MatToolbarModule} from "@angular/material/toolbar";
+import { Component, OnInit } from '@angular/core';
+import { FormService } from "../services/form.service";
+import { Router, RouterModule } from "@angular/router";
+import { FormsModule, NgForm } from "@angular/forms";
+import { GrupoService } from "../services/grupo.service";
+import { Pessoa } from "../models/pessoa";
+import { Grupo } from "../models/grupo";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatSelectModule } from "@angular/material/select";
+import { MatCardModule } from "@angular/material/card";
+import { CommonModule } from "@angular/common";
+import { MatInputModule } from "@angular/material/input";
+import { MatOptionModule } from "@angular/material/core";
+import { MatToolbarModule } from "@angular/material/toolbar";
 
 @Component({
   selector: 'app-grupos',
@@ -30,29 +30,41 @@ import {MatToolbarModule} from "@angular/material/toolbar";
   templateUrl: './grupos.component.html',
   styleUrl: './grupos.component.css'
 })
-export class GruposComponent {
+export class GruposComponent implements OnInit {
 
-  pessoas: Pessoa[] = [];
-
+  pessoas: Pessoa[] = [];  // Lista de pessoas carregada pelo FormService
+  grupos: Grupo[] = [];    // Array de grupos
   grupo: Grupo = {
     id: 0,
     nome: '',
     descricao: '',
     pessoaid: 0
-   };
+  };
 
-  constructor(private _FormService: FormService, private _router: Router,  private _GrupoService: GrupoService) {}
+  constructor(
+    private _FormService: FormService,
+    private _router: Router,
+    private _GrupoService: GrupoService
+  ) {}
 
   ngOnInit() {
-    // Pegue o id da pessoa do serviço ou outra fonte de dados
+    // Carregar pessoas no select
     this._FormService.getPessoas().subscribe({
       next: (pessoas: Pessoa[]) => {
-        if (pessoas.length > 0) {
-          this.grupo.pessoaid = pessoas[0].id; // Por exemplo, pegando o id da primeira pessoa
-        }
+        this.pessoas = pessoas;  // Armazena a lista de pessoas no array pessoas
       },
       error: (error) => {
         console.error('Erro ao obter pessoas', error);
+      }
+    });
+
+    // Carregar a lista de grupos
+    this._GrupoService.getGrupos().subscribe({
+      next: (grupos: Grupo[]) => {
+        this.grupos = grupos;  // Armazena a lista de grupos
+      },
+      error: (error) => {
+        console.error('Erro ao obter grupos', error);
       }
     });
   }
@@ -65,23 +77,32 @@ export class GruposComponent {
         alert('O nome do grupo é obrigatório.');
         return;
       }
-    this._GrupoService.salvarGrupo(this.grupo).subscribe({
-      next: (data) => {
-        console.log('Grupo salvo com sucesso', data);
 
-        // Redefinir o formulário e o objeto grupo
-        myForm.reset();
-        this.grupo = {
-          id: 0,
-          nome: '',
-          descricao: '',
-          pessoaid: 0  // Reseta o id da pessoa
-        };
+      // Validação: Pessoa deve ser selecionada
+      if (!this.grupo.pessoaid) {
+        alert('Você precisa selecionar uma pessoa.');
+        return;
+      }
 
-      },
-      error: (error) => {
-        console.error('Erro ao salvar o grupo', error);
-      },
-    });
+      // Chama o serviço para salvar o grupo
+      this._GrupoService.salvarGrupo(this.grupo).subscribe({
+        next: (data) => {
+          console.log('Grupo salvo com sucesso', data);
+
+          // Adiciona o novo grupo ao array de grupos
+          this.grupos.push(data);
+
+          // Redefinir o formulário e o objeto grupo
+          myForm.reset();
+      
+
+          // Redireciona para a lista de grupos
+          this._router.navigate(['/grupo-list']);
+        },
+        error: (error) => {
+          console.error('Erro ao salvar o grupo', error);
+        },
+      });
+    }
   }
-}}
+}

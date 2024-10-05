@@ -13,6 +13,10 @@ export class FormService {
   constructor(private http: HttpClient) {
   }
 
+  getPessoaById(id: number): Observable<Pessoa> {
+    return this.http.get<Pessoa>(`${this.apiUrl}/${id}`);
+  }
+
   // Adiciona uma pessoa ao array de pessoas
   salvarPessoa(pessoa: Pessoa): Observable<Pessoa> {
     return this.http.post<Pessoa>(this.apiUrl, pessoa);
