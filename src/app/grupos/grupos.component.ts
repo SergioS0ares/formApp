@@ -13,22 +13,20 @@ import { MatInputModule } from "@angular/material/input";
 import { MatOptionModule } from "@angular/material/core";
 import { MatToolbarModule } from "@angular/material/toolbar";
 
+
 @Component({
-  selector: 'app-grupos',
+  selector: 'app-grupo-list',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterModule, // Necessário se o componente usar diretivas de roteamento
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
-    FormsModule,
-    MatToolbarModule
+    MatTable,
+    DatePipe,
+    MatTableModule,
+    RouterLink,
+    MatCardActions,
+    MatButton
   ],
-  templateUrl: './grupos.component.html',
-  styleUrl: './grupos.component.css'
+  templateUrl: './grupo-list-component.component.html',
+  styleUrl: './grupo-list-component.component.css'
 })
 export class GruposComponent implements OnInit {
 
@@ -56,7 +54,7 @@ export class GruposComponent implements OnInit {
       error: (error) => {
         console.error('Erro ao obter pessoas', error);
       }
-    });
+    }
 
     // Carregar a lista de grupos
     this._GrupoService.getGrupos().subscribe({
@@ -94,7 +92,7 @@ export class GruposComponent implements OnInit {
 
           // Redefinir o formulário e o objeto grupo
           myForm.reset();
-      
+
 
           // Redireciona para a lista de grupos
           this._router.navigate(['/grupo-list']);
@@ -104,5 +102,5 @@ export class GruposComponent implements OnInit {
         },
       });
     }
-  }
+
 }
